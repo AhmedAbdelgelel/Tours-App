@@ -1,5 +1,5 @@
 const User = require('../models/userModel');
-const bcrypt = require('bcryptjs');
+const bcrypt = require('bcrypt');
 const AppError = require('../utils/appError');
 const catchAsync = require('../utils/catchAsync');
 
@@ -170,8 +170,7 @@ exports.updateMe = catchAsync(async (req, res, next) => {
   });
 });
 // Delete user information
-exports.deleteMe = catchAsync( async ( req, res, next ) =>
-{
+exports.deleteMe = catchAsync(async (req, res, next) => {
   // 1) Delete user from collection
   await User.findByIdAndUpdate(req.user.id, { active: false });
   // 2) Send response
