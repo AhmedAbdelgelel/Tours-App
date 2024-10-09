@@ -1,6 +1,7 @@
 const express = require('express');
 const tourController = require('./../controllers/tourController');
 const authController = require('./../controllers/authController'); // Corrected import
+const reviewController = require('./../controllers/reviewController');
 const router = express.Router();
 
 router
@@ -28,4 +29,12 @@ router
     authController.restrictTo('admin', 'lead-guide'),
     tourController.deleteTour
   );
+router
+  .route('/:tourId/reviews')
+  .post(
+    authController.protect,
+    authController.restrictTo('user'),
+    reviewController.createReview
+  );
+
 module.exports = router;
