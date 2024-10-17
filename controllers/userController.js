@@ -3,7 +3,6 @@ const bcrypt = require('bcrypt');
 const AppError = require('../utils/appError');
 const catchAsync = require('../utils/catchAsync');
 const factory = require('./handlerFactory');
-
 const filterObj = (obj, ...allowedFields) => {
   const newObj = {};
   Object.keys(obj).forEach(el => {
@@ -53,100 +52,17 @@ exports.createUser = async (req, res) => {
         user: newUser
       }
     });
-    exports.updateUser = async (req, res) => {
-      try {
-        const { password, passwordConfirm, ...updateFields } = req.body;
-
-        if (password) {
-          if (password !== passwordConfirm) {
-            return res.status(400).json({
-              status: 'fail',
-              message: 'Passwords do not match'
-            });
-          }
-
-          // Hash the new password
-          updateFields.password = await bcrypt.hash(password, 12);
-        }
-
-        // Update user details
-        const user = await User.findByIdAndUpdate(req.params.id, updateFields, {
-          new: true,
-          runValidators: true
-        });
-
-        if (!user) {
-          return res.status(404).json({
-            status: 'fail',
-            message: 'No user found with that ID'
-          });
-        }
-
-        // Remove sensitive field from response
-        user.passwordConfirm = undefined;
-
-        res.status(200).json({
-          status: 'success',
-          data: { user }
-        });
-      } catch (error) {
-        res.status(400).json({
-          status: 'fail',
-          message: error.message
-        });
-      }
-    };
   } catch (error) {
-    res.status(404).json({
+    res.status(400).json({
       status: 'fail',
       message: error
     });
   }
 };
-exports.updateUser = async (req, res) => {
-  try {
-    const { password, passwordConfirm, ...updateFields } = req.body;
+exports.updateUser = factory.updateOne(User);
 
-    if (password) {
-      if (password !== passwordConfirm) {
-        return res.status(400).json({
-          status: 'fail',
-          message: 'Passwords do not match'
-        });
-      }
-
-      // Hash the new password
-      updateFields.password = await bcrypt.hash(password, 12);
-    }
-
-    // Update user details
-    const user = await User.findByIdAndUpdate(req.params.id, updateFields, {
-      new: true,
-      runValidators: true
-    });
-    user.passwordConfirm = undefined;
-
-    if (!user) {
-      return res.status(404).json({
-        status: 'fail',
-        message: 'No user found with that ID'
-      });
-    }
-
-    res.status(200).json({
-      status: 'success',
-      data: { user }
-    });
-  } catch (error) {
-    res.status(400).json({
-      status: 'fail',
-      message: error.message
-    });
-  }
-};
-
+// Update the current user
 exports.updateMe = catchAsync(async (req, res, next) => {
-  // 1) Create error if user POSTs password data
   if (req.body.password || req.body.passwordConfirm) {
     return next(
       new AppError(
@@ -155,14 +71,13 @@ exports.updateMe = catchAsync(async (req, res, next) => {
       )
     );
   }
-  // 2) Update user document
+
   const filteredBody = filterObj(req.body, 'name', 'email');
   const updatedUser = await User.findByIdAndUpdate(req.user.id, filteredBody, {
     new: true,
     runValidators: true
   });
 
-  // 3) Send the updated user back
   res.status(200).json({
     status: 'success',
     data: {
@@ -172,9 +87,7 @@ exports.updateMe = catchAsync(async (req, res, next) => {
 });
 // Delete user information
 exports.deleteMe = catchAsync(async (req, res, next) => {
-  // 1) Delete user from collection
   await User.findByIdAndUpdate(req.user.id, { active: false });
-  // 2) Send response
   res.status(204).json({
     status: 'success',
     data: null

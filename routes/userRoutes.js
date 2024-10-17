@@ -16,7 +16,7 @@ router
     authController.protect,
     authController.restrictTo('admin'),
     userController.getAllUsers
-  ) // Protect this route
+  )
   .post(userController.createUser);
 router.patch(
   '/updateMyPassword',
@@ -31,6 +31,5 @@ router
   .get(userController.getUser)
   .patch(userController.updateUser)
   .delete(userController.deleteUser);
-
 
 module.exports = router;
